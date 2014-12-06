@@ -1,12 +1,17 @@
-# -*- coding: utf-8 -*-
-#
-# irccat - Simplify posting to IRC from shell scripts
-#
+# coding=utf-8
+"""
+irccat.py - Network socket listener
+Copyright (c) 2014 Mikael Sörlin <iamtew@asylunatic.se>
+Licensed under the MIT License.
+
+https://github.com/iamtew/weechat-scripts
+"""
+
 SCRIPT_NAME    = "irccat"
 SCRIPT_AUTHOR  = "Mikael Sörlin <iamtew@asylunatic.se>"
 SCRIPT_VERSION = "0.1.dev1"
 SCRIPT_LICENSE = "MIT"
-SCRIPT_DESC    = "Simplify posting to IRC from shell scripts"
+SCRIPT_DESC    = "Network socket listener"
 
 try:
     import weechat
@@ -21,7 +26,6 @@ except ImportError:
 
 def irccat_start():
     """Startup function"""
-    prnt('', 'irccat: starting up')
     buffer = weechat.buffer_new('irccat', '', '', '', '')
     weechat.buffer_set(buffer, 'title', '[irccat]')
 
@@ -30,8 +34,8 @@ def irccat_start():
 
 def irccat_end():
     """Cleanup function"""
-    prnt('', 'irccat: shutting down')
     weechat.buffer_close(irccat_buffer)
+    return weechat.WEECHAT_RC_OK
 
 
 if __name__ == '__main__' and import_ok and \
