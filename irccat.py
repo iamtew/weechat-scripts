@@ -111,7 +111,6 @@ def irccat_listener_start():
 
     weechat.config_set_plugin('port', str(irccat['socket'].getsockname()[1]))
     irccat['socket'].listen(5)
-    # urlserver['hook_fd'] = weechat.hook_fd(urlserver['socket'].fileno(), 1, 0, 0, 'urlserver_server_fd_cb', '')
     irccat['hook_fd'] = weechat.hook_fd(irccat['socket'].fileno(), 1, 0, 0, 'irccat_listener_fd_cb', '')
     irccat_listener_status()
 
