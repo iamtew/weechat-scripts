@@ -34,8 +34,9 @@ except ImportError as message:
 
 
 irccat = {
-    'socket': None,
-    'buffer': ''
+    'socket':  None,
+    'hook_fd': None,
+    'buffer':  ''
 }
 
 irccat_settings_default = {
@@ -51,6 +52,22 @@ irccat_settings = {}
 def debug(str):
     if DEBUG:
         weechat.prnt('', '%sDEBUG: %s' % (weechat.prefix('error'), str))
+
+
+def irccat_listener_fd_cb(data, fd):
+    """
+    Listener file descriptor callback
+    """
+    if not irccat['socket']:
+        return weechat.WEECHAT_RC_OK
+
+    conn, addr = irccat['socket'].accept()
+    data = conn.recv(1024)
+
+    weechat.prnt(irccat['buffer'], 'Message: %s' % (data))
+
+    conn.close()
+    return weechat.WEECHAT_RC_OK
 
 
 def irccat_listener_status():
@@ -94,6 +111,8 @@ def irccat_listener_start():
 
     weechat.config_set_plugin('port', str(irccat['socket'].getsockname()[1]))
     irccat['socket'].listen(5)
+    # urlserver['hook_fd'] = weechat.hook_fd(urlserver['socket'].fileno(), 1, 0, 0, 'urlserver_server_fd_cb', '')
+    irccat['hook_fd'] = weechat.hook_fd(irccat['socket'].fileno(), 1, 0, 0, 'irccat_listener_fd_cb', '')
     irccat_listener_status()
 
 
