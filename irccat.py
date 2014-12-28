@@ -42,7 +42,7 @@ irccat = {
 irccat_settings_default = {
     'autostart': ('on', 'Start the listening socket on startup'),
     'address':   ('localhost', 'Address to listen to'),
-    'port':      ('', 'Port to listen to (empty value = random free port)'),
+    'port':      ('5234', 'Port to listen to (empty value = random free port)'),
     'buffer':    ('on', 'Enable the irccat buffer'),
 }
 
@@ -52,6 +52,13 @@ irccat_settings = {}
 def debug(str):
     if DEBUG:
         weechat.prnt('', '%sDEBUG: %s' % (weechat.prefix('error'), str))
+
+
+def message_handler(addr, data):
+    """
+    Handle our message and do some stuff with it here
+    """
+    weechat.prnt(irccat['buffer'], 'meeh: %s %s ' % (data, addr))
 
 
 def irccat_listener_fd_cb(data, fd):
@@ -64,7 +71,8 @@ def irccat_listener_fd_cb(data, fd):
     conn, addr = irccat['socket'].accept()
     data = conn.recv(1024)
 
-    weechat.prnt(irccat['buffer'], 'Message: %s' % (data))
+    message_handler(addr, data)
+    # weechat.prnt(irccat['buffer'], 'Message from "%s" saying: %s' % (addr, data))
 
     conn.close()
     return weechat.WEECHAT_RC_OK
@@ -148,13 +156,21 @@ def irccat_buffer_input_cb(data, buffer, input_data):
     """
     Handle input in our buffer
     """
-    if input_data in ('show run'):
-        weechat.prnt(buffer, 'Running configuration:')
-        for key in irccat_settings:
-            weechat.prnt(buffer,
-                         'Setting: %s = %s' % (key, irccat_settings[key]))
+    # buffer_cmd(input_data)
+    if ('show run', 'configuration') in input_data:
+        buffer_command_show_run()
 
     return weechat.WEECHAT_RC_OK
+
+
+def buffer_command_show_run():
+    """
+    Handle our input on the buffer
+    """
+    weechat.prnt(irccat['buffer'], 'irccat settings:')
+    for key in irccat_settings:
+        weechat.prnt(irccat['buffer'],
+                     ' %s = %s' % (key, irccat_settings[key]))
 
 
 def irccat_buffer_close_cb(data, buffer):
@@ -210,6 +226,25 @@ def irccat_end():
     weechat.buffer_close(irccat['buffer'])
 
     return weechat.WEECHAT_RC_OK
+
+
+def hash_channels():
+    """
+    Return hash of network and channels the client is on
+    """
+    result = {}
+    irc_servers = weechat.infolist_get('irc_server', '', '')
+
+    while weechat.infolist_next(irc_servers):
+        current_server = weechat.infolist_string(irc_servers, 'name')
+        result[current_server] = []
+
+        irc_channels = weechat.infolist_get('irc_channel', '', current_server)
+        while weechat.infolist_next(irc_channels):
+            current_channel = weechat.infolist_string(irc_channels, 'name')
+            result[current_server].append(current_channel)
+
+    return result
 
 
 if __name__ == '__main__' and import_ok and \
